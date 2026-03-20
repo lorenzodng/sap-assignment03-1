@@ -1,0 +1,76 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="ClassCanBeRecord" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="myIgnoredAnnotations">
+        <list>
+          <option value="buildingblocks.infrastructure.Adapter" />
+          <option value="io.micronaut.*" />
+          <option value="jakarta.*" />
+          <option value="javax.*" />
+          <option value="org.springframework.*" />
+        </list>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="VulnerableLibrariesLocal" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="isIgnoringEnabled" value="true" />
+      <option name="ignoredModules">
+        <list>
+          <option value="request-management" />
+          <option value="request-management" />
+          <option value="request-management" />
+          <option value="drone-management" />
+          <option value="drone-management" />
+          <option value="delivery_management" />
+          <option value="delivery_management" />
+          <option value="drone-management" />
+          <option value="delivery_management" />
+          <option value="api-gateway" />
+          <option value="api-gateway" />
+          <option value="api-gateway" />
+          <option value="delivery-management" />
+          <option value="delivery-management" />
+          <option value="delivery-management" />
+        </list>
+      </option>
+      <option name="ignoredPackages">
+        <list>
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.2" />
+          <option value="org.apache.kafka:kafka-clients:3.7.1" />
+          <option value="org.lz4:lz4-java:1.8.0" />
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.2" />
+          <option value="org.apache.kafka:kafka-clients:3.7.1" />
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.2" />
+          <option value="org.apache.kafka:kafka-clients:3.7.1" />
+          <option value="org.lz4:lz4-java:1.8.0" />
+          <option value="org.lz4:lz4-java:1.8.0" />
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.2" />
+          <option value="org.apache.kafka:kafka-clients:3.7.1" />
+          <option value="org.lz4:lz4-java:1.8.0" />
+          <option value="com.fasterxml.jackson.core:jackson-core:2.18.2" />
+          <option value="org.apache.kafka:kafka-clients:3.7.1" />
+          <option value="org.lz4:lz4-java:1.8.0" />
+        </list>
+      </option>
+      <option name="ignoredReasons">
+        <list>
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+          <option value="Not exploitable" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>
