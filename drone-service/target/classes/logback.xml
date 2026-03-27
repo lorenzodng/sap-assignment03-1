@@ -5,7 +5,7 @@
         </encoder>
     </appender>
 
-    <logger name="drone_management" level="info"/>
+    <logger name="drone" level="info"/>
     <logger name="org.apache.kafka" level="warn"/>
 
     <root level="info">

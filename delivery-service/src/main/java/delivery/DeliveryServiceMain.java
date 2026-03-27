@@ -6,7 +6,6 @@ import io.vertx.ext.web.Router;
 import delivery.domain.Shipment;
 import delivery.infrastructure.DroneAssignedEventConsumer;
 import delivery.infrastructure.DroneUnavailableEventConsumer;
-import delivery.infrastructure.ShipmentCreatedEventConsumer;
 import delivery.infrastructure.TrackingDeliveryController;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,10 +17,10 @@ public class DeliveryServiceMain {
     private static final Logger log = LoggerFactory.getLogger(DeliveryServiceMain.class);
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("delivery-management").load(); //carica le variabili del file .env
+        Dotenv dotenv = Dotenv.configure().directory("delivery-service").load(); //carica le variabili del file .env
         String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
 
-        int port = Integer.parseInt(System.getenv("PORT"));
+        int port = Integer.parseInt(dotenv.get("PORT"));
 
         Vertx vertx = Vertx.vertx();
 
@@ -29,7 +28,6 @@ public class DeliveryServiceMain {
         Map<String, Shipment> shipments = new HashMap<>();
         new DroneAssignedEventConsumer(vertx, bootstrap, shipments);
         new DroneUnavailableEventConsumer(vertx, bootstrap, shipments);
-        new ShipmentCreatedEventConsumer(vertx, bootstrap, shipments);
 
         //crea il controller REST
         TrackingDeliveryController trackingController = new TrackingDeliveryController(shipments);
@@ -41,6 +39,6 @@ public class DeliveryServiceMain {
         //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
-        log.info("DeliveryManagement microservice started");
+        log.info("Delivery service started on port {}", port);
     }
 }

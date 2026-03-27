@@ -31,10 +31,12 @@ public class AssignDroneImpl implements AssignDrone {
         }).min((d1, d2) -> Double.compare(calculateDistance(d1.getPosition(), pickupPosition), calculateDistance(d2.getPosition(), pickupPosition))).orElse(null);
     }
 
-    //calcola la distanza tra due posizioni
+    //calcola la distanza in km tra due posizioni
     private double calculateDistance(Position p1, Position p2) {
-        double latDiff = p1.getLatitude() - p2.getLatitude();
-        double lonDiff = p1.getLongitude() - p2.getLongitude();
-        return Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+        final int R = 6371; //raggio della Terra in km
+        double dLat = Math.toRadians(p2.getLatitude() - p1.getLatitude());
+        double dLon = Math.toRadians(p2.getLongitude() - p1.getLongitude());
+        double haversine = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(p1.getLatitude())) * Math.cos(Math.toRadians(p2.getLatitude())) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1-haversine));
     }
 }

@@ -24,7 +24,7 @@ public class DroneAssignedEventConsumer {
         this.shipments = shipments;
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
-        config.put("key.deserializer", "org.apache.kafka.com mon.serialization.StringDeserializer");
+        config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         config.put("group.id", "delivery-management-group");
         config.put("auto.offset.reset", "earliest");
@@ -37,15 +37,13 @@ public class DroneAssignedEventConsumer {
     private void scheduleShipment(String message) {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
-        Shipment shipment = shipments.get(shipmentId);
-        if (shipment != null) {
-            Position droneInitialPosition = new Position(event.getDouble("droneLatitude"), event.getDouble("droneLongitude"));
-            Position pickupPosition = new Position(event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"));
-            Position deliveryPosition = new Position(event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"));
-            long assignedAt = event.getLong("assignedAt");
-            double deliverySpeed = event.getDouble("droneSpeed");
-            shipment.schedule(droneInitialPosition, pickupPosition, deliveryPosition, assignedAt, deliverySpeed);
-            log.info("Shipment {} scheduled", shipmentId);
-        }
+        Position droneInitialPosition = new Position(event.getDouble("droneLatitude"), event.getDouble("droneLongitude"));
+        Position pickupPosition = new Position(event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"));
+        Position deliveryPosition = new Position(event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"));
+        long assignedAt = event.getLong("assignedAt");
+        double deliverySpeed = event.getDouble("droneSpeed");
+        Shipment shipment = new Shipment(shipmentId, droneInitialPosition, pickupPosition, deliveryPosition, assignedAt, deliverySpeed);
+        shipments.put(shipmentId, shipment);
+        log.info("Shipment {} scheduled", shipmentId);
     }
 }

@@ -5,7 +5,6 @@ import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.json.JSONObject;
 import delivery.domain.Shipment;
-import delivery.domain.ShipmentStatus;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -36,10 +35,8 @@ public class DroneUnavailableEventConsumer {
     private void cancelShipment(String message) {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
-        Shipment shipment = shipments.get(shipmentId);
-        if (shipment != null) {
-            shipment.updateStatus(ShipmentStatus.CANCELLED);
-            log.info("Shipment {} cancelled", shipmentId);
-        }
+        Shipment shipment = new Shipment(shipmentId);
+        shipments.put(shipmentId, shipment);
+        log.info("Shipment {} cancelled", shipmentId);
     }
 }

@@ -17,6 +17,18 @@ public class Shipment implements AggregateRoot<String> {
     private double deliverySpeed;
     private ShipmentStatus status;
 
+    //costruttore principale
+    public Shipment(String id, Position droneInitialPosition, Position pickupPosition, Position deliveryPosition, long assignedAt, double deliverySpeed) {
+        this.id = id;
+        this.droneInitialPosition = droneInitialPosition;
+        this.pickupPosition = pickupPosition;
+        this.deliveryPosition = deliveryPosition;
+        this.assignedAt = assignedAt;
+        this.deliverySpeed = deliverySpeed;
+        this.status = ShipmentStatus.SCHEDULED;
+    }
+
+    //costruttore per la spedizione cancellata (drone non disponibile)
     public Shipment(String id) {
         this.id = id;
         this.droneInitialPosition = null;
@@ -24,17 +36,7 @@ public class Shipment implements AggregateRoot<String> {
         this.deliveryPosition = null;
         this.assignedAt = 0;
         this.deliverySpeed = 0;
-        this.status = ShipmentStatus.REQUESTED;
-    }
-
-    //aggiorna la spedizione con le informazioni del drone assegnato
-    public void schedule(Position droneInitialPosition, Position pickupPosition, Position deliveryPosition, long assignedAt, double deliverySpeed) {
-        this.droneInitialPosition = droneInitialPosition;
-        this.pickupPosition = pickupPosition;
-        this.deliveryPosition = deliveryPosition;
-        this.assignedAt = assignedAt;
-        this.deliverySpeed = deliverySpeed;
-        this.status = ShipmentStatus.SCHEDULED;
+        this.status = ShipmentStatus.CANCELLED;
     }
 
     //calcola la posizione attuale del drone
@@ -72,11 +74,13 @@ public class Shipment implements AggregateRoot<String> {
         return new Position(lat, lon);
     }
 
-    //calcola la distanza tra due punti
+    //calcola la distanza in km tra due posizioni
     private double calculateDistance(Position p1, Position p2) {
-        double latDiff = p1.getLatitude() - p2.getLatitude();
-        double lonDiff = p1.getLongitude() - p2.getLongitude();
-        return Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+        final int R = 6371;
+        double dLat = Math.toRadians(p2.getLatitude() - p1.getLatitude());
+        double dLon = Math.toRadians(p2.getLongitude() - p1.getLongitude());
+        double haversine = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(Math.toRadians(p1.getLatitude())) * Math.cos(Math.toRadians(p2.getLatitude())) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1-haversine));
     }
 
     //calcola il tempo rimanente alla consegna
@@ -90,7 +94,7 @@ public class Shipment implements AggregateRoot<String> {
         double distanceCovered = deliverySpeed * elapsedHours; //calcola la distanza totale percorsa dal drone
         double totalDistance = calculateDistance(droneInitialPosition, pickupPosition) + calculateDistance(pickupPosition, deliveryPosition); //calcola la distanza totale che il drone deve percorrere (base->ritiro + ritiro->destinazione)
         double remainingDistance = Math.max(0, totalDistance - distanceCovered); //calcola la distanza rimanente (distanza totale - distanza già percorsa)
-        return (remainingDistance / deliverySpeed) * 60; //converte la distanza rimanente in minuti
+        return (int) Math.ceil((remainingDistance / deliverySpeed) * 60); //converte la distanza rimanente in minuti (senza secondi), arrotondando per eccesso
     }
 
     @Override
@@ -110,13 +114,10 @@ public class Shipment implements AggregateRoot<String> {
                 log.info("Delivery {} completed", id);
             } else if (distanceCovered >= distanceToPickup) { //se il drone ha raggiunto il logo di ritiro
                 this.status = ShipmentStatus.IN_PROGRESS;
-                log.info("Delivery {} cancelled", id);
+                log.info("Delivery {} in progress", id);
             }
         }
         return status;
     }
 
-    public void updateStatus(ShipmentStatus newStatus) {
-        this.status = newStatus;
-    }
 }

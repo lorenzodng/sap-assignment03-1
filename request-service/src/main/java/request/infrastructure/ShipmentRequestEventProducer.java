@@ -13,14 +13,13 @@ import org.slf4j.LoggerFactory;
 
 //producer kafka che pubblica gli eventi di richiesta spedizione
 @Adapter
-public class ShipmentEventProducer {
+public class ShipmentRequestEventProducer {
 
-    private static final Logger log = LoggerFactory.getLogger(ShipmentEventProducer.class);
-    private static final String TOPIC_REQUESTED = "shipment-requested"; //nome del topic su cui sono pubblicati gli eventi di richieste di spedizione
-    private static final String TOPIC_CREATED = "shipment-created";
+    private static final Logger log = LoggerFactory.getLogger(ShipmentRequestEventProducer.class);
+    private static final String TOPIC = "shipment-requested"; //nome del topic su cui sono pubblicati gli eventi di richieste di spedizione
     private final KafkaProducer<String, String> producer; //producer kafka che invia gli eventi
 
-    public ShipmentEventProducer(Vertx vertx, String bootstrapServers) {
+    public ShipmentRequestEventProducer(Vertx vertx, String bootstrapServers) {
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
         config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //la chiave dell'evento è in formato stinga
@@ -41,17 +40,8 @@ public class ShipmentEventProducer {
         event.put("packageWeight", shipment.getPackage().getWeight());
         event.put("deliveryTimeLimit", shipment.getDeliveryTimeLimit());
 
-        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC_REQUESTED, shipment.getId(), event.toString()); //crea l'evento
+        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipment.getId(), event.toString()); //crea l'evento
         producer.send(record); //pubblica l'evento
         log.info("Shipment {} request event published", shipment.getId());
-    }
-
-    //pubblica l'evento di creazione richiesta spedizione verso delivery-management
-    public void publishShipmentCreated(String shipmentId) {
-        JSONObject event = new JSONObject();
-        event.put("shipmentId", shipmentId);
-        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC_CREATED, shipmentId, event.toString());
-        producer.send(record);
-        log.info("Shipment {} create event published", shipmentId);
     }
 }

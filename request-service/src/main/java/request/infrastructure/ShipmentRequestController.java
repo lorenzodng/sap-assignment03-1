@@ -20,9 +20,9 @@ public class ShipmentRequestController {
 
     private final CreateShipmentRequest createShipmentRequest;
     private final ValidateShipmentRequest validateShipmentRequest;
-    private final ShipmentEventProducer eventProducer;
+    private final ShipmentRequestEventProducer eventProducer;
 
-    public ShipmentRequestController(CreateShipmentRequest createShipmentRequest, ValidateShipmentRequest validateShipmentRequest, ShipmentEventProducer eventProducer) {
+    public ShipmentRequestController(CreateShipmentRequest createShipmentRequest, ValidateShipmentRequest validateShipmentRequest, ShipmentRequestEventProducer eventProducer) {
         this.createShipmentRequest = createShipmentRequest;
         this.validateShipmentRequest = validateShipmentRequest;
         this.eventProducer = eventProducer;
@@ -45,7 +45,6 @@ public class ShipmentRequestController {
         Shipment shipment = createShipmentRequest.create(UUID.randomUUID().toString(), user, pickupLocation, deliveryLocation, LocalDate.parse(body.getString("pickupDate")), LocalTime.parse(body.getString("pickupTime")), body.getInteger("deliveryTimeLimit"), pack);
         if (validateShipmentRequest.validate(shipment)) {  //valida la richiesta
             eventProducer.publishShipmentRequested(shipment); //invoca il produttore per pubblicare l'evento
-            eventProducer.publishShipmentCreated(shipment.getId()); //invoca il produttore per pubblicare l'evento
             ctx.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(shipment.getId()); //costruisce il messaggio di risposta e lo invia all'api-gateway
         } else {
             ctx.response().setStatusCode(400).end("Invalid request");

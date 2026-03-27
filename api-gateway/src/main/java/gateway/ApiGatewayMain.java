@@ -13,15 +13,15 @@ public class ApiGatewayMain {
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure().directory("api-gateway").load(); //carica il .env
-        String requestManagementUrl = dotenv.get("REQUEST_MANAGEMENT_URL"); //legge il primo url
-        String deliveryManagementUrl = dotenv.get("DELIVERY_MANAGEMENT_URL"); //legge il secondo url
+        String requestServiceUrl = dotenv.get("REQUEST_SERVICE_URL"); //legge il primo url
+        String deliveryServiceUrl = dotenv.get("DELIVERY_SERVICE_URL"); //legge il secondo url
 
-        int port = Integer.parseInt(System.getenv("PORT"));
+        int port = Integer.parseInt(dotenv.get("PORT"));
 
         Vertx vertx = Vertx.vertx();
 
         //crea il controller
-        ApiGatewayController apiGatewayController = new ApiGatewayController(vertx, requestManagementUrl, deliveryManagementUrl);
+        ApiGatewayController apiGatewayController = new ApiGatewayController(vertx, requestServiceUrl, deliveryServiceUrl);
 
         //crea il router e registra le rotte
         Router router = Router.router(vertx);
@@ -30,6 +30,6 @@ public class ApiGatewayMain {
         //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
-        log.info("ApiGateway microservice started");
+        log.info("Api gateway started on port {}", port);
     }
 }

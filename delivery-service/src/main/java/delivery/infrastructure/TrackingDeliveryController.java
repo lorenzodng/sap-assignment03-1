@@ -32,8 +32,9 @@ public class TrackingDeliveryController {
         Shipment shipment = shipments.get(id); //recupera la spedizione dalla mappa
         if (shipment != null) { //se la richiesta è stata creata con successo
             JSONObject response = new JSONObject();
-            response.put("status", shipment.getStatus().name());
-            if (shipment.getStatus() == ShipmentStatus.CANCELLED) { //se lo stato della richiesta è CANCELLED
+            ShipmentStatus status = shipment.getStatus();
+            response.put("status", status.name());
+            if (status == ShipmentStatus.CANCELLED) { //se lo stato della richiesta è CANCELLED
                 response.put("message", "No drone available for this shipment");
             }
             ctx.response().setStatusCode(200).putHeader("Content-Type", "application/json").end(response.toString());
