@@ -41,10 +41,10 @@ public class DroneEventProducer {
         event.put("deliveryLatitude", deliveryLatitude);
         event.put("deliveryLongitude", deliveryLongitude);
         event.put("assignedAt", System.currentTimeMillis());
-
         KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipmentId, event.toString());
         producer.send(record);
         log.info("Drone {} assigned to shipment {}", drone.getId(), shipmentId);
+        log.info("Shipment {} drone assigned event published", shipmentId);
     }
 
     //pubblica l'evento di drone non disponibile sul canale dedicato
@@ -54,5 +54,6 @@ public class DroneEventProducer {
         KafkaProducerRecord<String, String> record = KafkaProducerRecord.create("drone-not-available", shipmentId, event.toString());
         producer.send(record);
         log.warn("No available drones for shipment {}", shipmentId);
+        log.warn("Shipment {} drone not available event published", shipmentId);
     }
 }

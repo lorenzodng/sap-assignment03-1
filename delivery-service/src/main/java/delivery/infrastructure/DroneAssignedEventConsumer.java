@@ -37,6 +37,7 @@ public class DroneAssignedEventConsumer {
     private void scheduleShipment(String message) {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
+        log.info("Shipment {} drone assigned event received", shipmentId);
         Position droneInitialPosition = new Position(event.getDouble("droneLatitude"), event.getDouble("droneLongitude"));
         Position pickupPosition = new Position(event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"));
         Position deliveryPosition = new Position(event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"));

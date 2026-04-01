@@ -42,7 +42,7 @@ public class ShipmentRequestedEventConsumer {
     private void assignDroneToShipment(String message) {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
-        log.info("Shipment request event received {}", shipmentId);
+        log.info("Shipment {} request event received", shipmentId);
         double pickupLatitude = event.getDouble("pickupLatitude");
         double pickupLongitude = event.getDouble("pickupLongitude");
         double deliveryLatitude = event.getDouble("deliveryLatitude");

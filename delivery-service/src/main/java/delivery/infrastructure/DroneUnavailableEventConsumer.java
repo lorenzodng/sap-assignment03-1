@@ -35,6 +35,7 @@ public class DroneUnavailableEventConsumer {
     private void cancelShipment(String message) {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
+        log.info("Shipment {} drone not available event received", shipmentId);
         Shipment shipment = new Shipment(shipmentId);
         shipments.put(shipmentId, shipment);
         log.info("Shipment {} cancelled", shipmentId);
