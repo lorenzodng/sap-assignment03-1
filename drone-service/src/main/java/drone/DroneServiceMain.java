@@ -21,6 +21,7 @@ public class DroneServiceMain {
         Dotenv dotenv = Dotenv.configure().directory("drone-service").load(); //carica le variabili del file .env
         String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
 
+        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
         //crea i use case
