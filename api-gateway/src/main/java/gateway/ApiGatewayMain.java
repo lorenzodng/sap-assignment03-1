@@ -29,9 +29,8 @@ public class ApiGatewayMain {
         Router router = Router.router(vertx);
         apiGatewayController.registerRoutes(router);
 
-        //configura l'accesso all'interfaccia
+        //configura l'accesso all'interfaccia - in questo caso, differentemente dall'assignment 1, il frontend non è separato, quindi non ha senso utilizzare CorsHandler
         router.route("/ui/*").handler(StaticHandler.create("webroot"));
-        apiGatewayController.registerRoutes(router);
 
         //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
