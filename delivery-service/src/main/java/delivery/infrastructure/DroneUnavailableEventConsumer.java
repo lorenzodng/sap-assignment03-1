@@ -1,10 +1,10 @@
 package delivery.infrastructure;
 
 import buildingblocks.infrastructure.Adapter;
+import delivery.application.ShipmentManager;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.json.JSONObject;
-import delivery.domain.Shipment;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -16,10 +16,10 @@ public class DroneUnavailableEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(DroneUnavailableEventConsumer.class);
     private static final String TOPIC = "drone-not-available";
     private final KafkaConsumer<String, String> consumer;
-    private final Map<String, Shipment> shipments;
+    private final ShipmentManager shipmentManager;
 
-    public DroneUnavailableEventConsumer(Vertx vertx, String bootstrapServers, Map<String, Shipment> shipments) {
-        this.shipments = shipments;
+    public DroneUnavailableEventConsumer(Vertx vertx, String bootstrapServers, ShipmentManager shipmentManager) {
+        this.shipmentManager = shipmentManager;
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
         config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -36,8 +36,7 @@ public class DroneUnavailableEventConsumer {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
         log.info("Shipment {} drone not available event received", shipmentId);
-        Shipment shipment = new Shipment(shipmentId);
-        shipments.put(shipmentId, shipment);
-        log.info("Shipment {} cancelled", shipmentId);
+
+        shipmentManager.createShipmentFromAssignment(shipmentId, false, null, null, null, null, null, null, 0L, 0.0);
     }
 }

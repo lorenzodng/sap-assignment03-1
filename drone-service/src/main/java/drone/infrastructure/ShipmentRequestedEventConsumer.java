@@ -1,13 +1,11 @@
 package drone.infrastructure;
 
 import buildingblocks.infrastructure.Adapter;
+import drone.application.DroneAssignmentOrchestrator;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.consumer.KafkaConsumer;
 import org.json.JSONObject;
-import drone.application.AssignDrone;
-import drone.domain.Drone;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,14 +17,10 @@ public class ShipmentRequestedEventConsumer {
     private static final Logger log = LoggerFactory.getLogger(ShipmentRequestedEventConsumer.class);
     private static final String TOPIC = "shipment-requested";
     private final KafkaConsumer<String, String> consumer;
-    private final AssignDrone assignDrone;
-    private final List<Drone> drones;
-    private final DroneEventProducer eventProducer;
+    private final DroneAssignmentOrchestrator orchestrator;
 
-    public ShipmentRequestedEventConsumer(Vertx vertx, String bootstrapServers, AssignDrone assignDrone, List<Drone> drones, DroneEventProducer eventProducer) {
-        this.assignDrone = assignDrone;
-        this.drones = drones;
-        this.eventProducer = eventProducer;
+    public ShipmentRequestedEventConsumer(Vertx vertx, String bootstrapServers, DroneAssignmentOrchestrator orchestrator) {
+        this.orchestrator = orchestrator;
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
         config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
@@ -43,25 +37,6 @@ public class ShipmentRequestedEventConsumer {
         JSONObject event = new JSONObject(message);
         String shipmentId = event.getString("shipmentId");
         log.info("Shipment {} request event received", shipmentId);
-        double pickupLatitude = event.getDouble("pickupLatitude");
-        double pickupLongitude = event.getDouble("pickupLongitude");
-        double deliveryLatitude = event.getDouble("deliveryLatitude");
-        double deliveryLongitude = event.getDouble("deliveryLongitude");
-        double packageWeight = event.getDouble("packageWeight");
-        int deliveryTimeLimit = event.getInt("deliveryTimeLimit");
-        double distancePickupToDelivery = calculateDistance(pickupLatitude, pickupLongitude, deliveryLatitude, deliveryLongitude);
-        Drone assignedDrone = assignDrone.assign(drones, packageWeight, pickupLatitude, pickupLongitude, distancePickupToDelivery, deliveryTimeLimit);
-        if (assignedDrone != null) {
-            assignedDrone.setAvailable(false);
-            eventProducer.publishDroneAssigned(shipmentId, assignedDrone, pickupLatitude, pickupLongitude, deliveryLatitude, deliveryLongitude);
-        } else {
-            eventProducer.publishDroneNotAvailable(shipmentId);
-        }
-    }
-
-    private double calculateDistance(double lat1, double lon1, double lat2, double lon2) {
-        double latDiff = lat1 - lat2;
-        double lonDiff = lon1 - lon2;
-        return Math.sqrt(latDiff * latDiff + lonDiff * lonDiff);
+        orchestrator.handleShipmentRequested(shipmentId, event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"), event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"), event.getDouble("packageWeight"), event.getInt("deliveryTimeLimit"));
     }
 }

@@ -1,6 +1,7 @@
 package drone.infrastructure;
 
 import buildingblocks.infrastructure.Adapter;
+import drone.application.DroneEventProducer;
 import io.vertx.core.Vertx;
 import io.vertx.kafka.client.producer.KafkaProducer;
 import io.vertx.kafka.client.producer.KafkaProducerRecord;
@@ -13,13 +14,13 @@ import org.slf4j.LoggerFactory;
 
 //producer kafka che pubblica gli eventi di assegnazione drone
 @Adapter
-public class DroneEventProducer {
+public class KafkaDroneEventProducer implements DroneEventProducer {
 
-    private static final Logger log = LoggerFactory.getLogger(DroneEventProducer.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaDroneEventProducer.class);
     private static final String TOPIC = "drone-assigned";
     private final KafkaProducer<String, String> producer;
 
-    public DroneEventProducer(Vertx vertx, String bootstrapServers) {
+    public KafkaDroneEventProducer(Vertx vertx, String bootstrapServers) {
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
         config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
@@ -28,6 +29,7 @@ public class DroneEventProducer {
     }
 
     //pubblica l'evento di drone assegnato sul canale dedicato
+    @Override
     public void publishDroneAssigned(String shipmentId, Drone drone, double pickupLatitude, double pickupLongitude, double deliveryLatitude, double deliveryLongitude) {
         //costruisce l'evento json con tutte le informazioni necessarie per il calcolo della posizione del drone/pacco
         JSONObject event = new JSONObject();
@@ -48,6 +50,7 @@ public class DroneEventProducer {
     }
 
     //pubblica l'evento di drone non disponibile sul canale dedicato
+    @Override
     public void publishDroneNotAvailable(String shipmentId) {
         JSONObject event = new JSONObject();
         event.put("shipmentId", shipmentId);

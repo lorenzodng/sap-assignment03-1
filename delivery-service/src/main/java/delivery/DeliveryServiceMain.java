@@ -1,14 +1,15 @@
 package delivery;
 
+import delivery.application.ShipmentManager;
+import delivery.application.ShipmentManagerImpl;
+import delivery.application.ShipmentRepository;
+import delivery.infrastructure.InMemoryShipmentRepository;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
-import delivery.domain.Shipment;
 import delivery.infrastructure.DroneAssignedEventConsumer;
 import delivery.infrastructure.DroneUnavailableEventConsumer;
 import delivery.infrastructure.TrackingDeliveryController;
-import java.util.HashMap;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,19 +20,23 @@ public class DeliveryServiceMain {
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure().directory("delivery-service").load(); //carica le variabili del file .env
         String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
-
         int port = Integer.parseInt(dotenv.get("PORT"));
 
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //crea i consumer Kafka
-        Map<String, Shipment> shipments = new HashMap<>();
-        new DroneAssignedEventConsumer(vertx, bootstrap, shipments);
-        new DroneUnavailableEventConsumer(vertx, bootstrap, shipments);
+        //crea il repository
+        ShipmentRepository repository = new InMemoryShipmentRepository();
 
-        //crea il controller REST
-        TrackingDeliveryController trackingController = new TrackingDeliveryController(shipments);
+        //crea il manager
+        ShipmentManager shipmentManager = new ShipmentManagerImpl(repository);
+
+        //crea i consumer Kafka
+        new DroneAssignedEventConsumer(vertx, bootstrap, shipmentManager);
+        new DroneUnavailableEventConsumer(vertx, bootstrap, shipmentManager);
+
+        //crea il controller
+        TrackingDeliveryController trackingController = new TrackingDeliveryController(shipmentManager);
 
         //crea il router e registra le rotte
         Router router = Router.router(vertx);

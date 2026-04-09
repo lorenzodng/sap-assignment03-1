@@ -5,6 +5,7 @@ import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
 import request.application.CreateShipmentRequest;
+import request.application.ShipmentRequestOrchestrator;
 import request.application.ValidateShipmentRequest;
 import request.domain.Package;
 import request.domain.Position;
@@ -22,14 +23,10 @@ import org.slf4j.LoggerFactory;
 public class ShipmentRequestController {
 
     private static final Logger log = LoggerFactory.getLogger(ShipmentRequestController.class);
-    private final CreateShipmentRequest createShipmentRequest;
-    private final ValidateShipmentRequest validateShipmentRequest;
-    private final ShipmentRequestEventProducer eventProducer;
+    private final ShipmentRequestOrchestrator orchestrator;
 
-    public ShipmentRequestController(CreateShipmentRequest createShipmentRequest, ValidateShipmentRequest validateShipmentRequest, ShipmentRequestEventProducer eventProducer) {
-        this.createShipmentRequest = createShipmentRequest;
-        this.validateShipmentRequest = validateShipmentRequest;
-        this.eventProducer = eventProducer;
+    public ShipmentRequestController(ShipmentRequestOrchestrator orchestrator) {
+        this.orchestrator = orchestrator;
     }
 
     //registra la rotta
@@ -40,31 +37,20 @@ public class ShipmentRequestController {
     //crea la richiesta e invoca il broker kafka
     private void createShipment(RoutingContext ctx) {
         var body = ctx.body().asJsonObject();
+        var pickup = body.getJsonObject("pickupLocation");
+        var delivery = body.getJsonObject("deliveryLocation");
+        var pkg = body.getJsonObject("package");
 
-        //crea la richiesta
-        User user = new User(body.getString("userId"), body.getString("userName"), body.getString("userSurname"));
-        Position pickupLocation = new Position(body.getJsonObject("pickupLocation").getDouble("latitude"), body.getJsonObject("pickupLocation").getDouble("longitude"));
-        Position deliveryLocation = new Position(body.getJsonObject("deliveryLocation").getDouble("latitude"), body.getJsonObject("deliveryLocation").getDouble("longitude"));
-        Package pack = new Package(UUID.randomUUID().toString(), body.getJsonObject("package").getDouble("weight"), body.getJsonObject("package").getBoolean("fragile"));
-        Shipment shipment = createShipmentRequest.create(UUID.randomUUID().toString(), user, pickupLocation, deliveryLocation, LocalDate.parse(body.getString("pickupDate")), LocalTime.parse(body.getString("pickupTime")), body.getInteger("deliveryTimeLimit"), pack);
-        if (validateShipmentRequest.validate(shipment)) {  //valida la richiesta
-            log.info("Shipment {} request created", shipment.getId());
-            LocalDateTime pickupDateTime = LocalDateTime.of(shipment.getPickupDate(), shipment.getPickupTime());
-            long delayMs = java.time.Duration.between(LocalDateTime.now(), pickupDateTime).toMillis();
-
-            //il drone parte subito se la data/ora è già passata o è adesso
-            if (delayMs <= 0) {
-                eventProducer.publishShipmentRequested(shipment); //invoca il produttore per pubblicare l'evento
-                ctx.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(shipment.getId()); //costruisce il messaggio di risposta e lo invia al client
-                //altrimenti attende
-            } else {
-                ctx.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(shipment.getId()); //costruisce il messaggio di risposta e lo invia al client
-                ctx.vertx().setTimer(delayMs, id -> {
-                    eventProducer.publishShipmentRequested(shipment); //invoca il produttore per pubblicare l'evento al momento del pickup
+        orchestrator.orchestrateRequest(body.getString("userId"), body.getString("userName"), body.getString("userSurname"), pickup.getDouble("latitude"), pickup.getDouble("longitude"), delivery.getDouble("latitude"), delivery.getDouble("longitude"), body.getString("pickupDate"), body.getString("pickupTime"), body.getInteger("deliveryTimeLimit"), pkg.getDouble("weight"), pkg.getBoolean("fragile"))
+                .onSuccess(shipment -> {
+                    ctx.response().setStatusCode(201).putHeader("Content-Type", "application/json").end(shipment.getId());
+                })
+                .onFailure(err -> {
+                    if ("VALIDATION_FAILED".equals(err.getMessage())) {
+                        ctx.response().setStatusCode(400).end("Invalid request");
+                    } else {
+                        ctx.response().setStatusCode(500).end("Internal Server Error");
+                    }
                 });
-            }
-        } else {
-            ctx.response().setStatusCode(400).end("Invalid request");
-        }
     }
 }

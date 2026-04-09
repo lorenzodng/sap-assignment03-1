@@ -3,9 +3,8 @@ package request;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
-import request.application.CreateShipmentRequestImpl;
-import request.application.ValidateShipmentRequestImpl;
-import request.infrastructure.ShipmentRequestEventProducer;
+import request.application.*;
+import request.infrastructure.KafkaShipmentRequestEventProducer;
 import request.infrastructure.ShipmentRequestController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,22 +15,26 @@ public class RequestServiceMain {
 
     public static void main(String[] args) {
         Dotenv dotenv = Dotenv.configure().directory("request-service").load(); //carica le variabili del file .env
-        String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
 
+        String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
         int port = Integer.parseInt(dotenv.get("PORT"));
 
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
+        //crea il producer Kafka
+        ShipmentRequestEventProducer eventProducer = new KafkaShipmentRequestEventProducer(vertx, bootstrap);
+
         //crea i use case
         CreateShipmentRequestImpl createShipmentRequest = new CreateShipmentRequestImpl();
         ValidateShipmentRequestImpl validateShipmentRequest = new ValidateShipmentRequestImpl();
+        ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl(eventProducer, vertx);
 
-        //crea il producer Kafka
-        ShipmentRequestEventProducer eventProducer = new ShipmentRequestEventProducer(vertx, bootstrap);
+        //crea l'orchestratore
+        ShipmentRequestOrchestrator orchestrator = new ShipmentRequestOrchestratorImpl(createShipmentRequest, validateShipmentRequest, shipmentScheduler);
 
         //crea il controller REST
-        ShipmentRequestController controller = new ShipmentRequestController(createShipmentRequest, validateShipmentRequest, eventProducer);
+        ShipmentRequestController controller = new ShipmentRequestController(orchestrator);
 
         //crea il router e registra la rotta
         Router router = Router.router(vertx);
