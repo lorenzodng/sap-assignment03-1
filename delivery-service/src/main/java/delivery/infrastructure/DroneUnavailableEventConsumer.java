@@ -10,6 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+//recupera l'evento di drone non disponibile pubblicato dal gestore droni
 @Adapter
 public class DroneUnavailableEventConsumer {
 
@@ -33,10 +34,14 @@ public class DroneUnavailableEventConsumer {
 
     //crea la spedizione con stato CANCELLED
     private void cancelShipment(String message) {
-        JSONObject event = new JSONObject(message);
-        String shipmentId = event.getString("shipmentId");
-        log.info("Shipment {} drone not available event received", shipmentId);
-
-        shipmentManager.createShipmentFromAssignment(shipmentId, false, null, null, null, null, null, null, 0L, 0.0);
+        String shipmentId = "unknown";
+        try {
+            JSONObject event = new JSONObject(message);
+            shipmentId = event.getString("shipmentId");
+            log.info("Shipment {} drone not available event received", shipmentId);
+            shipmentManager.createShipmentFromAssignment(shipmentId, false, null, null, null, null, null, null, 0L, 0.0);
+        } catch (Exception ex) {
+            log.info("Failed to receive shipment {} assignment event", shipmentId, ex);
+        }
     }
 }

@@ -44,6 +44,9 @@ public class KafkaShipmentRequestEventProducer implements ShipmentRequestEventPr
         event.put("deliveryTimeLimit", shipment.getDeliveryTimeLimit());
 
         KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipment.getId(), event.toString()); //crea l'evento
-        return producer.send(record).onSuccess(v-> log.info("Shipment {} request event published", shipment.getId())).mapEmpty(); //pubblica l'evento
+        return producer.send(record)
+                .onSuccess(v -> log.info("Shipment {} request event published", shipment.getId()))
+                .onFailure(err -> log.error("Failed to publish event for shipment {}", shipment.getId(), err))
+                .mapEmpty();
     }
 }

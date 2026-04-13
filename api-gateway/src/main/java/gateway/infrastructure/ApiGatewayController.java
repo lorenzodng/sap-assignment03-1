@@ -36,40 +36,44 @@ public class ApiGatewayController {
         2) se la chiamata ha successo, recupera il codice di stato e invia al client il body come stringa
         3) se fallisce, invia al client un messaggio di errore
          */
-        client.postAbs(requestManagementUrl + "/shipments").sendBuffer(Buffer.buffer(ctx.body().asString())).onSuccess(response -> {
-            ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
-        }).onFailure(err -> {
-            ctx.response().setStatusCode(500).end("Error forwarding request");
-        });
+        client.postAbs(requestManagementUrl + "/shipments").putHeader("Content-Type", "application/json").sendBuffer(Buffer.buffer(ctx.body().asString()))
+                .onSuccess(response -> {
+                    ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
+                }).onFailure(err -> {
+                    ctx.response().setStatusCode(500).end("Error forwarding request");
+                });
     }
 
     //inoltra la richiesta di tracking a delivery-management
     private void getShipmentStatus(RoutingContext ctx) {
         String id = ctx.pathParam("id");
-        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/status").send().onSuccess(response -> {
-            ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
-        }).onFailure(err -> {
-            ctx.response().setStatusCode(500).end("Error forwarding request");
-        });
+        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/status").send()
+                .onSuccess(response -> {
+                    ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
+                }).onFailure(err -> {
+                    ctx.response().setStatusCode(500).end("Error forwarding request");
+                });
     }
 
     //inoltra la richiesta di posizione a delivery-management
     private void getDronePosition(RoutingContext ctx) {
         String id = ctx.pathParam("id");
-        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/position").send().onSuccess(response -> {
-            ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
-        }).onFailure(err -> {
-            ctx.response().setStatusCode(500).end("Error forwarding request");
-        });
+        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/position").send()
+                .onSuccess(response -> {
+                    ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
+                }).onFailure(err -> {
+                    ctx.response().setStatusCode(500).end("Error forwarding request");
+                });
     }
 
     //inoltra la richiesta di tempo rimanente a delivery-management
     private void getRemainingTime(RoutingContext ctx) {
         String id = ctx.pathParam("id");
-        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/remaining-time").send().onSuccess(response -> {
-            ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
-        }).onFailure(err -> {
-            ctx.response().setStatusCode(500).end("Error forwarding request");
-        });
+        client.getAbs(deliveryManagementUrl + "/shipments/" + id + "/remaining-time").send()
+                .onSuccess(response -> {
+                    ctx.response().setStatusCode(response.statusCode()).end(response.bodyAsString());
+                }).onFailure(err -> {
+                    ctx.response().setStatusCode(500).end("Error forwarding request");
+                });
     }
 }

@@ -4,6 +4,7 @@ import drone.domain.Drone;
 import drone.domain.GeoUtils;
 import java.util.List;
 
+//orchestratore che coordina il flusso principale di assegnazione di un drone
 public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestrator {
 
     private final AssignDrone assignDrone;
@@ -16,24 +17,20 @@ public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestra
         this.repository = repository;
     }
 
+    //gestisce l'assegnazione del drone alla spedizione
     @Override
     public void handleShipmentRequested(String shipmentId, double pickupLat, double pickupLon, double deliveryLat, double deliveryLon, double weight, int timeLimit) {
-
-        // Calcolo distanza (logica di business)
-        double distance = calculateDistanceInKm(pickupLat, pickupLon, deliveryLat, deliveryLon);
-        List<Drone> drones = repository.findAll(); //recupera tutti i droni esistenti
-        Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit);
-
-        if (assignedDrone != null) {
+        try {
+            //step 1: assegna il drone
+            double distance = GeoUtils.haversine(pickupLat, pickupLon, deliveryLat, deliveryLon);
+            List<Drone> drones = repository.findAll(); //recupera tutti i droni esistenti
+            Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit);
             repository.updateAvailability(assignedDrone.getId(), false); //imposta il drone come non più disponibile
+
+            //step 2: pubblica l'evento
             eventProducer.publishDroneAssigned(shipmentId, assignedDrone, pickupLat, pickupLon, deliveryLat, deliveryLon);
-        } else {
+        } catch (DroneNotAvailableException e) { //se non esiste un drone disponibile
             eventProducer.publishDroneNotAvailable(shipmentId);
         }
-    }
-
-    //calcola la distanza tra il luogo di pickup e il luogo di destinazione
-    private double calculateDistanceInKm(double lat1, double lon1, double lat2, double lon2) {
-        return GeoUtils.haversine(lat1, lon1, lat2, lon2);
     }
 }

@@ -44,10 +44,14 @@ public class KafkaDroneEventProducer implements DroneEventProducer {
         event.put("deliveryLatitude", deliveryLatitude);
         event.put("deliveryLongitude", deliveryLongitude);
         event.put("assignedAt", System.currentTimeMillis());
+
         KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipmentId, event.toString());
-        producer.send(record);
-        log.info("Drone {} assigned to shipment {}", drone.getId(), shipmentId);
-        log.info("Shipment {} drone assigned event published", shipmentId);
+        producer.send(record)
+                .onSuccess(v-> {
+                    log.info("Drone {} assigned to shipment {}", drone.getId(), shipmentId);
+                    log.info("Shipment {} drone assigned event published", shipmentId);
+                })
+                .onFailure(err -> log.error("Failed to publish event for assignment {}", shipmentId, err));
     }
 
     //pubblica l'evento di drone non disponibile sul canale dedicato
@@ -55,9 +59,13 @@ public class KafkaDroneEventProducer implements DroneEventProducer {
     public void publishDroneNotAvailable(String shipmentId) {
         JSONObject event = new JSONObject();
         event.put("shipmentId", shipmentId);
+
         KafkaProducerRecord<String, String> record = KafkaProducerRecord.create("drone-not-available", shipmentId, event.toString());
-        producer.send(record);
-        log.warn("No available drones for shipment {}", shipmentId);
-        log.warn("Shipment {} drone not available event published", shipmentId);
+        producer.send(record)
+                .onSuccess(v-> {
+                    log.warn("No available drones for shipment {}", shipmentId);
+                    log.warn("Shipment {} drone not available event published", shipmentId);
+                })
+                .onFailure(err -> log.error("Failed to publish event for assignment {}", shipmentId, err));
     }
 }

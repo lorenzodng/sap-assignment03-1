@@ -23,6 +23,11 @@ public class InMemoryDroneRepository implements DroneRepository {
     //aggiorna il drone come non disponibile
     @Override
     public void updateAvailability(String droneId, boolean available) {
-        drones.stream().filter(d -> d.getId().equals(droneId)).findFirst().ifPresent(d -> d.setAvailable(available));
+        Drone drone = drones.stream()
+                .filter(d -> d.getId().equals(droneId))
+                .findFirst()
+                .orElseThrow(DroneNotFoundException::new);
+
+        drone.setAvailable(available);
     }
 }

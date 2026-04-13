@@ -34,9 +34,14 @@ public class ShipmentRequestedEventConsumer {
 
     //assegna un drone alla spedizione e invoca il broker kafka
     private void assignDroneToShipment(String message) {
-        JSONObject event = new JSONObject(message);
-        String shipmentId = event.getString("shipmentId");
-        log.info("Shipment {} request event received", shipmentId);
-        orchestrator.handleShipmentRequested(shipmentId, event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"), event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"), event.getDouble("packageWeight"), event.getInt("deliveryTimeLimit"));
+        String shipmentId = "unknown";
+        try {
+            JSONObject event = new JSONObject(message);
+            shipmentId = event.getString("shipmentId");
+            log.info("Shipment {} request event received", shipmentId);
+            orchestrator.handleShipmentRequested(shipmentId, event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"), event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"), event.getDouble("packageWeight"), event.getInt("deliveryTimeLimit"));
+        } catch (Exception ex) {
+            log.info("Failed to receive shipment {} request event", shipmentId, ex);
+        }
     }
 }

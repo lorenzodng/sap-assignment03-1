@@ -10,7 +10,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//recupera l'evento di assegnazione drone pubblicato dal gestore droni
+//recupera l'evento di drone disponibile pubblicato dal gestore droni
 @Adapter
 public class DroneAssignedEventConsumer {
 
@@ -34,10 +34,14 @@ public class DroneAssignedEventConsumer {
 
     //aggiorna lo stato della richiesta in SCHEDULED
     private void scheduleShipment(String message) {
-        JSONObject event = new JSONObject(message);
-        String shipmentId = event.getString("shipmentId");
-        log.info("Shipment {} drone assigned event received", shipmentId);
-
-        shipmentManager.createShipmentFromAssignment(shipmentId, true, event.getDouble("droneLatitude"), event.getDouble("droneLongitude"), event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"), event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"), event.getLong("assignedAt"), event.getDouble("droneSpeed"));
+        String shipmentId = "unknown";
+        try {
+            JSONObject event = new JSONObject(message);
+            shipmentId = event.getString("shipmentId");
+            log.info("Shipment {} drone assigned event received", shipmentId);
+            shipmentManager.createShipmentFromAssignment(shipmentId, true, event.getDouble("droneLatitude"), event.getDouble("droneLongitude"), event.getDouble("pickupLatitude"), event.getDouble("pickupLongitude"), event.getDouble("deliveryLatitude"), event.getDouble("deliveryLongitude"), event.getLong("assignedAt"), event.getDouble("droneSpeed"));
+        } catch (Exception ex) {
+            log.info("Failed to receive shipment {} assignment event", shipmentId, ex);
+        }
     }
 }
