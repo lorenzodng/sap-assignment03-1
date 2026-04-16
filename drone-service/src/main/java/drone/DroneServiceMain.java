@@ -18,8 +18,8 @@ public class DroneServiceMain {
     private static final Logger log = LoggerFactory.getLogger(DroneServiceMain.class);
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("drone-service").load(); //carica le variabili del file .env
-        String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
+        Dotenv dotenv = Dotenv.configure().directory("drone-service").ignoreIfMissing().load();
+        String bootstrap = System.getenv("KAFKA_BOOTSTRAP_SERVERS") != null ? System.getenv("KAFKA_BOOTSTRAP_SERVERS") : dotenv.get("KAFKA_BOOTSTRAP_SERVERS");
 
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();

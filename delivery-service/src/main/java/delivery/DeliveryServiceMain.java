@@ -18,9 +18,9 @@ public class DeliveryServiceMain {
     private static final Logger log = LoggerFactory.getLogger(DeliveryServiceMain.class);
 
     public static void main(String[] args) {
-        Dotenv dotenv = Dotenv.configure().directory("delivery-service").load(); //carica le variabili del file .env
-        String bootstrap = dotenv.get("KAFKA_BOOTSTRAP_SERVERS"); //legge il campo
-        int port = Integer.parseInt(dotenv.get("PORT"));
+        Dotenv dotenv = Dotenv.configure().directory("delivery-service").ignoreIfMissing().load();
+        String bootstrap = System.getenv("KAFKA_BOOTSTRAP_SERVERS") != null ? System.getenv("KAFKA_BOOTSTRAP_SERVERS") : dotenv.get("KAFKA_BOOTSTRAP_SERVERS");
+        int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : Integer.parseInt(dotenv.get("PORT"));
 
         //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();

@@ -1,0 +1,6 @@
+gateway\infrastructure\ApiGatewayController.class
+gateway\ApiGatewayMain.class
+buildingblocks\application\OutboundPort.class
+gateway\infrastructure\PrometheusApiGatewayMetricsProxy.class
+buildingblocks\infrastructure\Adapter.class
+gateway\application\ApiGatewayMetrics.class

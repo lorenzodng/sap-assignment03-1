@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drone-service
+  namespace: sap-assignment03
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drone-service
+  template:
+    metadata:
+      labels:
+        app: drone-service
+    spec:
+      containers:
+        - name: drone-service
+          image: lorenzodangelo/drone-service:v1
+          env:
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-service:9092"

@@ -8,19 +8,22 @@ import request.domain.Shipment;
 //orchestratore che coordina il flusso principale di gestione di una richiesta
 public class ShipmentRequestOrchestratorImpl implements ShipmentRequestOrchestrator {
 
-    private static final Logger log = LoggerFactory.getLogger(CreateShipmentRequestImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(ShipmentRequestOrchestratorImpl.class);
     private final CreateShipmentRequest creator;
     private final ValidateShipmentRequest validator;
     private final ShipmentScheduler scheduler;
+    private final RequestMetrics metrics;
 
-    public ShipmentRequestOrchestratorImpl(CreateShipmentRequest creator, ValidateShipmentRequest validator, ShipmentScheduler scheduler) {
+    public ShipmentRequestOrchestratorImpl(CreateShipmentRequest creator, ValidateShipmentRequest validator, ShipmentScheduler scheduler, RequestMetrics metrics) {
         this.creator = creator;
         this.validator = validator;
         this.scheduler = scheduler;
+        this.metrics = metrics;
     }
 
     @Override
     public Future<Shipment> orchestrateRequest(String userId, String userName, String userSurname, Double pickupLat, Double pickupLon, Double deliveryLat, Double deliveryLon, String pickupDate, String pickupTime, Integer deliveryTimeLimit, Double weight, Boolean fragile) {
+        long startTime = System.currentTimeMillis(); //tempo di avvio della gestione della richiesta
         try {
             //step 1: crea la richiesta
             Shipment shipment = creator.create(userId, userName, userSurname, pickupLat, pickupLon, deliveryLat, deliveryLon, pickupDate, pickupTime, deliveryTimeLimit, weight, fragile);
@@ -31,6 +34,10 @@ public class ShipmentRequestOrchestratorImpl implements ShipmentRequestOrchestra
             return scheduler.schedule(shipment).map(v -> shipment); //trasforma il valore di ritorno in una Future
         } catch (Exception e) {
             return Future.failedFuture(e);
+        } finally {
+            long endTime = System.currentTimeMillis(); //tempo di fine della gestione della richiesta
+            double durationSeconds = (endTime - startTime) / 1000.0; //calcola il tempo trascorso
+            metrics.observeLatency(durationSeconds); //aggiorna la metrica
         }
     }
 }
