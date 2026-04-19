@@ -19,7 +19,7 @@ public class CheckDroneAvailabilityImpl implements CheckDroneAvailability {
         }
 
         //verifica disponibilità batteria
-        double availableBattery = drone.getBatteryCapacity() - Drone.SAFETY_BATTERY;
+        double availableBattery = Drone.INITIAL_BATTERY - Drone.SAFETY_BATTERY;
         double requiredBattery = (distanceDroneToPickup + distancePickupToDelivery) * Drone.BATTERY_CONSUMPTION_PER_KM;
         if (availableBattery < requiredBattery) {
             return false;

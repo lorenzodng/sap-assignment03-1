@@ -76,7 +76,9 @@ public class Shipment implements AggregateRoot<String> {
 
         double elapsedHours = (System.currentTimeMillis() - assignedAt) / MS_TO_HOURS; //calcola le ore trascorse dall'assegnazione del drone
         double distanceCovered = deliverySpeed * elapsedHours; //calcola la distanza totale percorsa dal drone
-        double totalDistance = GeoUtils.haversine(droneInitialPosition.getLatitude(), droneInitialPosition.getLongitude(), pickupPosition.getLatitude(), pickupPosition.getLongitude()) + GeoUtils.haversine(pickupPosition.getLatitude(), pickupPosition.getLongitude(), deliveryPosition.getLatitude(), deliveryPosition.getLongitude()); //calcola la distanza totale che il drone deve percorrere (base->ritiro + ritiro->destinazione)
+        double distanceToPickup = GeoUtils.haversine(droneInitialPosition.getLatitude(), droneInitialPosition.getLongitude(), pickupPosition.getLatitude(), pickupPosition.getLongitude());
+        double distanceToDelivery = GeoUtils.haversine(pickupPosition.getLatitude(), pickupPosition.getLongitude(), deliveryPosition.getLatitude(), deliveryPosition.getLongitude());
+        double totalDistance = distanceToPickup + distanceToDelivery;
         double remainingDistance = Math.max(0, totalDistance - distanceCovered); //calcola la distanza rimanente (distanza totale - distanza già percorsa)
         return (int) Math.ceil((remainingDistance / deliverySpeed) * MINUTES_IN_HOUR); //converte la distanza rimanente in minuti (senza secondi), arrotondando per eccesso
     }
