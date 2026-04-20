@@ -10,7 +10,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//recupera l'evento di drone non disponibile pubblicato dal gestore droni
 @Adapter
 public class DroneUnavailableEventConsumer {
 
@@ -32,7 +31,6 @@ public class DroneUnavailableEventConsumer {
         this.consumer.handler(record -> cancelShipment(record.value()));
     }
 
-    //crea la spedizione con stato CANCELLED
     private void cancelShipment(String message) {
         String shipmentId = "unknown";
         try {

@@ -7,5 +7,6 @@ import java.util.Optional;
 @OutboundPort
 public interface ShipmentRepository {
     void save(Shipment shipment);
+
     Optional<Shipment> findById(String id);
 }

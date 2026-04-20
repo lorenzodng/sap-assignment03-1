@@ -5,7 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import request.domain.Shipment;
 
-//orchestratore che coordina il flusso principale di gestione di una richiesta
 public class ShipmentRequestOrchestratorImpl implements ShipmentRequestOrchestrator {
 
     private static final Logger log = LoggerFactory.getLogger(ShipmentRequestOrchestratorImpl.class);
@@ -23,21 +22,21 @@ public class ShipmentRequestOrchestratorImpl implements ShipmentRequestOrchestra
 
     @Override
     public Future<Shipment> orchestrateRequest(String userId, String userName, String userSurname, Double pickupLat, Double pickupLon, Double deliveryLat, Double deliveryLon, String pickupDate, String pickupTime, Integer deliveryTimeLimit, Double weight, Boolean fragile) {
-        long startTime = System.currentTimeMillis(); //tempo di avvio della gestione della richiesta
+        long startTime = System.currentTimeMillis();
         try {
-            //step 1: crea la richiesta
+            //step 1: create and validate the request
             Shipment shipment = creator.create(userId, userName, userSurname, pickupLat, pickupLon, deliveryLat, deliveryLon, pickupDate, pickupTime, deliveryTimeLimit, weight, fragile);
             validator.validate(shipment);
             log.info("Shipment {} request created", shipment.getId());
 
-            //step 2: verifica il tempo trascorso e pubblica l'evento
-            return scheduler.schedule(shipment).map(v -> shipment); //trasforma il valore di ritorno in una Future
+            //step 2: validate timing constraints and publish the event
+            return scheduler.schedule(shipment).map(v -> shipment);
         } catch (Exception e) {
             return Future.failedFuture(e);
         } finally {
-            long endTime = System.currentTimeMillis(); //tempo di fine della gestione della richiesta
-            double durationSeconds = (endTime - startTime) / 1000.0; //calcola il tempo trascorso
-            metrics.observeLatency(durationSeconds); //aggiorna la metrica
+            long endTime = System.currentTimeMillis();
+            double durationSeconds = (endTime - startTime) / 1000.0;
+            metrics.observeLatency(durationSeconds);
         }
     }
 }

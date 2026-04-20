@@ -13,27 +13,24 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//producer kafka che pubblica gli eventi di richiesta spedizione
-//proxy
 @Adapter
 public class KafkaShipmentRequestEventProducer implements ShipmentRequestEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaShipmentRequestEventProducer.class);
-    private static final String TOPIC = "shipment-requested"; //nome del topic su cui sono pubblicati gli eventi di richieste di spedizione
-    private final KafkaProducer<String, String> producer; //producer kafka che invia gli eventi
+    private static final String TOPIC = "shipment-requested";
+    private final KafkaProducer<String, String> producer;
 
     public KafkaShipmentRequestEventProducer(Vertx vertx, String bootstrapServers) {
         Map<String, String> config = new HashMap<>();
         config.put("bootstrap.servers", bootstrapServers);
-        config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //la chiave dell'evento è in formato stinga
-        config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer"); //il valore dell'evento è in formato stringa
-        this.producer = KafkaProducer.create(vertx, config); //crea il producer kafka
+        config.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        config.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        this.producer = KafkaProducer.create(vertx, config);
     }
 
-    //pubblica l'evento di richiesta spedizione verso drone-management
     @Override
     public Future<Void> publishShipmentRequested(Shipment shipment) {
-        //costruisce l'evento
+
         JSONObject event = new JSONObject();
         event.put("shipmentId", shipment.getId());
         event.put("pickupLatitude", shipment.getPickupLocation().getLatitude());
@@ -43,7 +40,7 @@ public class KafkaShipmentRequestEventProducer implements ShipmentRequestEventPr
         event.put("packageWeight", shipment.getPackage().getWeight());
         event.put("deliveryTimeLimit", shipment.getDeliveryTimeLimit());
 
-        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipment.getId(), event.toString()); //crea l'evento
+        KafkaProducerRecord<String, String> record = KafkaProducerRecord.create(TOPIC, shipment.getId(), event.toString());
         return producer.send(record)
                 .onSuccess(v -> log.info("Shipment {} request event published", shipment.getId()))
                 .onFailure(err -> log.error("Failed to publish event for shipment {}", shipment.getId(), err))

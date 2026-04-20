@@ -20,10 +20,14 @@ public class RequestServiceMain {
         int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : Integer.parseInt(dotenv.get("PORT"));
         int metricsPort = System.getenv("METRICS_PORT") != null ? Integer.parseInt(System.getenv("METRICS_PORT")) : Integer.parseInt(dotenv.get("METRICS_PORT"));
 
-        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //metriche
+        ShipmentRequestEventProducer eventProducer = new KafkaShipmentRequestEventProducer(vertx, bootstrap);
+
+        CreateShipmentRequestImpl createShipmentRequest = new CreateShipmentRequestImpl();
+        ValidateShipmentRequestImpl validateShipmentRequest = new ValidateShipmentRequestImpl();
+        ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl(eventProducer, vertx);
+
         RequestMetrics metrics = null;
         try {
             metrics = new PrometheusRequestMetricsProxy(metricsPort);
@@ -32,25 +36,13 @@ public class RequestServiceMain {
             log.error("Failed to start Prometheus metrics exporter: {}", e.getMessage());
         }
 
-        //crea il producer Kafka
-        ShipmentRequestEventProducer eventProducer = new KafkaShipmentRequestEventProducer(vertx, bootstrap);
-
-        //crea i use case
-        CreateShipmentRequestImpl createShipmentRequest = new CreateShipmentRequestImpl();
-        ValidateShipmentRequestImpl validateShipmentRequest = new ValidateShipmentRequestImpl();
-        ShipmentScheduler shipmentScheduler = new ShipmentSchedulerImpl(eventProducer, vertx);
-
-        //crea l'orchestratore
         ShipmentRequestOrchestrator orchestrator = new ShipmentRequestOrchestratorImpl(createShipmentRequest, validateShipmentRequest, shipmentScheduler, metrics);
 
-        //crea il controller REST
         ShipmentRequestController controller = new ShipmentRequestController(orchestrator);
 
-        //crea il router e registra la rotta
         Router router = Router.router(vertx);
         controller.registerRoutes(router);
 
-        //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
         log.info("Request service started on port {}", port);

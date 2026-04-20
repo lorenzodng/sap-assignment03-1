@@ -10,14 +10,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//recupera l'evento di drone disponibile pubblicato dal gestore droni
 @Adapter
 public class DroneAssignedEventConsumer {
 
     private static final Logger log = LoggerFactory.getLogger(DroneAssignedEventConsumer.class);
     private static final String TOPIC = "drone-assigned";
     private final KafkaConsumer<String, String> consumer;
-    private final ShipmentManager shipmentManager; // Usa il Manager!
+    private final ShipmentManager shipmentManager;
 
     public DroneAssignedEventConsumer(Vertx vertx, String bootstrapServers, ShipmentManager shipmentManager) {
         this.shipmentManager = shipmentManager;
@@ -32,7 +31,6 @@ public class DroneAssignedEventConsumer {
         this.consumer.handler(record -> scheduleShipment(record.value()));
     }
 
-    //aggiorna lo stato della richiesta in SCHEDULED
     private void scheduleShipment(String message) {
         String shipmentId = "unknown";
         try {

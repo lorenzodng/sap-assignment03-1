@@ -10,7 +10,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//recupera l'evento di creazione richiesta spedizione pubblicato dal gestore richieste
 @Adapter
 public class ShipmentRequestedEventConsumer {
 
@@ -25,14 +24,13 @@ public class ShipmentRequestedEventConsumer {
         config.put("bootstrap.servers", bootstrapServers);
         config.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         config.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        config.put("group.id", "drone-management-group"); //gruppo di consumer Kafka usato per tenere traccia di quali messaggi sono già stati letti da un gruppo di istanze di uno stesso microservizio - in questo modo kafka distribuisce i messaggi tra loro senza duplicati
-        config.put("auto.offset.reset", "earliest"); //legge tutti i messaggi dall'inizio del topic, anche quelli pubblicati prima dell'esistenza del consumer
+        config.put("group.id", "drone-management-group");
+        config.put("auto.offset.reset", "earliest");
         this.consumer = KafkaConsumer.create(vertx, config);
-        this.consumer.subscribe(TOPIC); //sottoscrive il consumatore al topic di richieste
-        this.consumer.handler(record -> assignDroneToShipment(record.value())); //registra il metodo di gestioine delle richieste
+        this.consumer.subscribe(TOPIC);
+        this.consumer.handler(record -> assignDroneToShipment(record.value()));
     }
 
-    //assegna un drone alla spedizione e invoca il broker kafka
     private void assignDroneToShipment(String message) {
         String shipmentId = "unknown";
         try {

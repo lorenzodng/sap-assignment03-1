@@ -4,7 +4,6 @@ import drone.domain.Drone;
 import drone.domain.GeoUtils;
 import java.util.List;
 
-//orchestratore che coordina il flusso principale di assegnazione di un drone
 public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestrator {
 
     private final AssignDrone assignDrone;
@@ -17,19 +16,18 @@ public class DroneAssignmentOrchestratorImpl implements DroneAssignmentOrchestra
         this.repository = repository;
     }
 
-    //gestisce l'assegnazione del drone alla spedizione
     @Override
     public void handleShipmentRequested(String shipmentId, double pickupLat, double pickupLon, double deliveryLat, double deliveryLon, double weight, int timeLimit) {
         try {
-            //step 1: assegna il drone
+            //step 1: assign a drone
             double distance = GeoUtils.haversine(pickupLat, pickupLon, deliveryLat, deliveryLon);
-            List<Drone> drones = repository.findAll(); //recupera tutti i droni esistenti
+            List<Drone> drones = repository.findAll();
             Drone assignedDrone = assignDrone.assign(drones, weight, pickupLat, pickupLon, distance, timeLimit);
-            repository.updateAvailability(assignedDrone.getId(), false); //imposta il drone come non più disponibile
+            repository.updateAvailability(assignedDrone.getId(), false);
 
-            //step 2: pubblica l'evento
+            //step 2: publish the event
             eventProducer.publishDroneAssigned(shipmentId, assignedDrone, pickupLat, pickupLon, deliveryLat, deliveryLon);
-        } catch (DroneNotAvailableException e) { //se non esiste un drone disponibile
+        } catch (DroneNotAvailableException e) {
             eventProducer.publishDroneNotAvailable(shipmentId);
         }
     }

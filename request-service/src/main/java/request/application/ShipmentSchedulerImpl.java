@@ -21,10 +21,9 @@ public class ShipmentSchedulerImpl implements ShipmentScheduler {
         LocalDateTime pickupDateTime = LocalDateTime.of(shipment.getPickupDate(), shipment.getPickupTime());
         long delayMs = Duration.between(LocalDateTime.now(), pickupDateTime).toMillis();
 
-        //se la data/ora è già passata o è adesso, il drone parte
         if (delayMs <= 0) {
             return eventProducer.publishShipmentRequested(shipment);
-        } else {//altrimenti attende
+        } else {
             vertx.setTimer(delayMs, id -> eventProducer.publishShipmentRequested(shipment));
             return Future.succeededFuture();
         }

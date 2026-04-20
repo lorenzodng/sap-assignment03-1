@@ -12,14 +12,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//producer kafka che pubblica gli eventi di assegnazione drone
-//proxy
 @Adapter
 public class KafkaDroneEventProducer implements DroneEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(KafkaDroneEventProducer.class);
-    private static final String TOPIC_ASSIGNED= "drone-assigned";
-    private static final String TOPIC_NOT_AVAILABLE= "drone-not-available";
+    private static final String TOPIC_ASSIGNED = "drone-assigned";
+    private static final String TOPIC_NOT_AVAILABLE = "drone-not-available";
     private final KafkaProducer<String, String> producer;
 
     public KafkaDroneEventProducer(Vertx vertx, String bootstrapServers) {

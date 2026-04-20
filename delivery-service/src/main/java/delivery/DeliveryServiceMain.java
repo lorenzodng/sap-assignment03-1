@@ -22,27 +22,20 @@ public class DeliveryServiceMain {
         String bootstrap = System.getenv("KAFKA_BOOTSTRAP_SERVERS") != null ? System.getenv("KAFKA_BOOTSTRAP_SERVERS") : dotenv.get("KAFKA_BOOTSTRAP_SERVERS");
         int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : Integer.parseInt(dotenv.get("PORT"));
 
-        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //crea il repository
         ShipmentRepository repository = new InMemoryShipmentRepository();
 
-        //crea il manager
         ShipmentManager shipmentManager = new ShipmentManagerImpl(repository);
 
-        //crea i consumer Kafka
         new DroneAssignedEventConsumer(vertx, bootstrap, shipmentManager);
         new DroneUnavailableEventConsumer(vertx, bootstrap, shipmentManager);
 
-        //crea il controller
         TrackingDeliveryController trackingController = new TrackingDeliveryController(shipmentManager);
 
-        //crea il router e registra le rotte
         Router router = Router.router(vertx);
         trackingController.registerRoutes(router);
 
-        //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
         log.info("Delivery service started on port {}", port);

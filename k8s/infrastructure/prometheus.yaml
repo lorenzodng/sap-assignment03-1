@@ -6,7 +6,7 @@ metadata:
 data:
   prometheus.yml: |
     global:
-      scrape_interval: 15s # frequency of metric collection
+      scrape_interval: 15s #frequency of metric collection
     scrape_configs:
       - job_name: 'api-gateway'
         static_configs:

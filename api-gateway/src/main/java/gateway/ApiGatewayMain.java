@@ -21,10 +21,8 @@ public class ApiGatewayMain {
         int port = System.getenv("PORT") != null ? Integer.parseInt(System.getenv("PORT")) : Integer.parseInt(dotenv.get("PORT"));
         int metricsPort = System.getenv("METRICS_PORT") != null ? Integer.parseInt(System.getenv("METRICS_PORT")) : Integer.parseInt(dotenv.get("METRICS_PORT"));
 
-        //istanza che contiene l'event loop per gestire le richieste in modo asincrono
         Vertx vertx = Vertx.vertx();
 
-        //metriche
         ApiGatewayMetrics metrics = null;
         try {
             metrics = new PrometheusApiGatewayMetricsProxy(metricsPort);
@@ -33,17 +31,13 @@ public class ApiGatewayMain {
             log.error("Failed to start Prometheus metrics server: {}", e.getMessage());
         }
 
-        //crea il controller
         ApiGatewayController apiGatewayController = new ApiGatewayController(vertx, requestServiceUrl, deliveryServiceUrl, metrics);
 
-        //crea il router e registra le rotte
         Router router = Router.router(vertx);
         apiGatewayController.registerRoutes(router);
 
-        //configura l'accesso all'interfaccia - in questo caso, differentemente dall'assignment 1, il frontend non è separato, quindi non ha senso utilizzare CorsHandler
         router.route("/ui/*").handler(StaticHandler.create("webroot"));
 
-        //avvia il server HTTP
         vertx.createHttpServer().requestHandler(router).listen(port);
 
         log.info("Api gateway started on port {}", port);
