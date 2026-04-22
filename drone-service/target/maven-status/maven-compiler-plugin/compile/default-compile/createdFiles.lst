@@ -7,7 +7,6 @@ drone\DroneServiceMain.class
 drone\domain\GeoUtils.class
 drone\infrastructure\ShipmentRequestedEventConsumer.class
 drone\application\DroneNotAvailableException.class
-buildingblocks\domain\AggregateRoot.class
 drone\application\DroneRepository.class
 buildingblocks\application\InboundPort.class
 buildingblocks\application\OutboundPort.class

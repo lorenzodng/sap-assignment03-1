@@ -28,10 +28,9 @@ public class KafkaDroneEventProducer implements DroneEventProducer {
         this.producer = KafkaProducer.create(vertx, config);
     }
 
-    //pubblica l'evento di drone assegnato sul canale dedicato
     @Override
     public void publishDroneAssigned(String shipmentId, Drone drone, double pickupLatitude, double pickupLongitude, double deliveryLatitude, double deliveryLongitude) {
-        //costruisce l'evento json con tutte le informazioni necessarie per il calcolo della posizione del drone/pacco
+
         JSONObject event = new JSONObject();
         event.put("shipmentId", shipmentId);
         event.put("droneId", drone.getId());
@@ -53,7 +52,6 @@ public class KafkaDroneEventProducer implements DroneEventProducer {
                 .onFailure(err -> log.error("Failed to publish event for assignment {}", shipmentId, err));
     }
 
-    //pubblica l'evento di drone non disponibile sul canale dedicato
     @Override
     public void publishDroneNotAvailable(String shipmentId) {
         JSONObject event = new JSONObject();
